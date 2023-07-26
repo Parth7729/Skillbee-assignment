@@ -8,6 +8,7 @@ const __dirname = dirname(__filename);
 
 const eta = new Eta({ views: path.join(__dirname, "eta-template") });
 
+const staticFileLimit = 10;
 
 async function get_data() {
     try {
@@ -16,21 +17,24 @@ async function get_data() {
         return data;
     }
     catch(e) {
-        console.log(e);
-        return 'error';
+        console.log(e.message);
+        return {};
     }
 }
 
 async function main() {
-    for(let i = 1; i<=10; i++) {
+    for(let i = 1; i<=staticFileLimit; i++) {
         const data = await get_data();
+
+        if(Object.keys(data).length === 0) continue;
+
         const res = eta.render("./sample", data);
         try {
             fs.writeFileSync(`./templates/index${i}.html`, res);
             console.log("written successfully");
         }
         catch (err) {
-            console.log(err);
+            console.log(err.message);
         }
     }
 }
