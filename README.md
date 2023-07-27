@@ -1,4 +1,3 @@
-
 # Project Title
 
 A script which generates unique pages dynamically using an api(Bored API). Templating engine - Eta.js is used to generate the pages.
@@ -39,5 +38,3 @@ clone this repo using ``` git clone https://github.com/Parth7729/Skillbee-assign
 install dependencies - ``` npm install ```
 
 finally run index.js - ``` node index.js ```
-
-
