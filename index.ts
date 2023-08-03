@@ -5,45 +5,59 @@ import fs from "fs";
 
 const eta = new Eta({ views: path.join(__dirname, "./../eta-template") });
 
-const staticFileLimit: number = 10;
+const staticFileLimit: number = 13, bundleSize: number = 5;
 
 type Data = {
-    activity?: string,
-    type?: string,
-    participants?: number,
-    price?: number,
-    link?: string,
-    key?: string,
-    accessibility?: number
+    activity: string,
+    type: string,
+    participants: number,
+    price: number,
+    link: string,
+    key: string,
+    accessibility: number
 }
 
-const getData = async () => {
+const getData = async (): Promise<Data | null> => {
     try {
+        // const res = await fetch("https://codehashira.in/api/index");     //wrong endpoint for testing
         const res = await fetch("https://www.boredapi.com/api/activity");
         const data: Data = await res.json();
         return data;
     }
     catch(err) {
-        console.log((err as Error).message);
-        return {};
+        console.log("Invalid response");
+        return null;
     }
     
 }
 
-const main = async () => {
-    for(let i = 1; i<=staticFileLimit; i++) {
-        const data: Data = await getData();
+const main = async (): Promise<void> => {
+    let currCount: number = 0, fileCount: number = 0;
 
-        if(Object.keys(data).length === 0) continue;
+    while(currCount < staticFileLimit) {
+        const resList: Promise<Data | null>[] = [];
 
-        const res: string = eta.render("./sample", data);
-        try {
-            fs.writeFileSync(`./templates/index${i}.html`, res);
-            console.log("written successfully");
+        for(let i = currCount; i<Math.min(staticFileLimit, currCount+bundleSize); i++) {
+            const promiseRes = getData();
+            resList.push(promiseRes);
         }
-        catch (err) {
-            console.log((err as Error).message);
-        }
+
+        currCount += bundleSize;
+
+        Promise.all(resList).then((responses: (Data | null)[]) => {
+            responses.map((data) => {
+                if(data !== null) {
+                    const res: string = eta.render("./sample", data);
+
+                    fs.writeFile(`./templates/index${fileCount++}.html`, res, (err) => {
+                        if(err) console.log(err.message);
+                        else console.log("written successfully");
+                    });
+                }
+
+            })
+        })
+    
     }
 }
 
